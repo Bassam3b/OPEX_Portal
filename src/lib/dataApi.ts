@@ -1,5 +1,7 @@
+// NOTE: Relaxed typings to avoid union conflicts with App.tsx's own types.
 import { supabase, BUCKET } from './supabaseClient'
-import type { Attachment } from './types'
+
+type Attachment = { name: string; size: number; url?: string }
 
 const toDb = (p: any) => ({
   id: p.id, title: p.title, department: p.department, sponsor: p.sponsor ?? null, type: p.type,
@@ -16,7 +18,7 @@ const fromDb = (r: any): any => ({
   completionPct: r.completion_pct ?? 0, createdAt: r.created_at ? Date.parse(r.created_at) : Date.now(),
 })
 
-export async function fetchProjects(): Promise<Project[]> {
+export async function fetchProjects(): Promise<any[]> {
   const { data, error } = await supabase.from('projects').select('*').order('created_at', { ascending: false })
   if (error) throw error; return (data ?? []).map(fromDb)
 }
@@ -24,7 +26,7 @@ export async function upsertProject(p: any): Promise<void> {
   const { error } = await supabase.from('projects').upsert(toDb(p)); if (error) throw error
 }
 
-export async function fetchIdeas(): Promise<Idea[]> {
+export async function fetchIdeas(): Promise<any[]> {
   const { data, error } = await supabase.from('ideas').select('*').order('created_at', { ascending: false })
   if (error) throw error; return (data ?? []).map((r: any) => ({
     id: r.id, title: r.title, owner: r.owner ?? undefined, department: r.department ?? undefined,

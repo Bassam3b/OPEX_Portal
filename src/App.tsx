@@ -1,8 +1,7 @@
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { PieChart, Pie, Cell, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend, LineChart, Line, ResponsiveContainer } from "recharts";
-import { fetchProjects, fetchIdeas, upsertProject, upsertIdea, deleteIdea as deleteIdeaDb, uploadAttachment, uploadTemplate, listTemplates, deleteTemplate } from "./lib/dataApi";
-import ExportImport from "./components/ExportImport";
+
 // ---- THEME ----
 const theme = {
   brand: {
@@ -98,17 +97,6 @@ export default function OpexApp() {
   ]; });
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
 
-  // Supabase initial load
-  useEffect(() => {
-    (async () => {
-      try {
-        const [projs, ids] = await Promise.all([fetchProjects(), fetchIdeas()]);
-        if (projs?.length) setProjects(projs);
-        if (ids?.length) setIdeas(ids);
-      } catch (e) { console.warn('Supabase fetch failed', e); }
-    })();
-  }, []);
-
   // Templates library (files uploaded in Templates tab)
   const [library, setLibrary] = useState<{ name: string; size: number; url?: string }[]>(() => {
     try { const raw = localStorage.getItem("opex_library_v1"); return raw ? JSON.parse(raw) : []; } catch { return []; }
@@ -179,7 +167,7 @@ export default function OpexApp() {
           <CIBoard
             ideas={ideas}
             setIdeas={setIdeas}
-            onPromote={(idea) => { deleteIdeaDb(idea.id).catch(console.error);
+            onPromote={(idea) => {
               const draft: Project = {
                 id: uid("proj"),
                 title: idea.title,
@@ -379,10 +367,11 @@ function ProjectRequest({ onSubmit }: { onSubmit: (p: Project) => void }) {
 
   const formRef = useRef<HTMLFormElement | null>(null);
 
-  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const f = e.target.files; if (!f) return;
-    const uploaded = await Promise.all(Array.from(f).map(file => uploadAttachment(file, 'projects')));
-    setFiles(prev => [...prev, ...uploaded]);
+  const handleUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files;
+    if (!f) return;
+    const list = Array.from(f).map((file) => ({ name: file.name, size: file.size, url: URL.createObjectURL(file) }));
+    setFiles((prev) => [...prev, ...list]);
   };
 
   const submit = () => {
@@ -407,7 +396,6 @@ function ProjectRequest({ onSubmit }: { onSubmit: (p: Project) => void }) {
       createdAt: Date.now(),
     };
     onSubmit(p);
-    upsertProject(p).catch(console.error);
     alert("Project submitted. It will appear in the Priority Matrix according to Impact/Effort.");
     setTitle("");
     setDepartment("");
@@ -539,9 +527,7 @@ function CIBoard({ ideas, setIdeas, onPromote }: { ideas: Idea[]; setIdeas: (i: 
 
   const quickAdd = () => {
     if (!newIdea.trim()) return;
-    const obj = { id: uid("idea"), title: newIdea.trim(), stage: "To Evaluate" } as Idea;
-    setIdeas([obj, ...ideas]);
-    upsertIdea(obj).catch(console.error);
+    setIdeas([{ id: uid("idea"), title: newIdea.trim(), stage: "To Evaluate" }, ...ideas]);
     setNewIdea("");
   };
 
@@ -600,8 +586,6 @@ function PriorityMatrix({ projectsByQuadrant, projects, setProjects, selectedPro
 
   const updateProject = (id: string, patch: Partial<Project>) => {
     setProjects(projects.map((p: Project) => (p.id === id ? { ...p, ...patch } : p)));
-    const current = projects.find((p: Project) => p.id === id);
-    if (current) { const updated = { ...current, ...patch } as Project; upsertProject(updated).catch(console.error); }
   };
 
   return (
@@ -821,11 +805,10 @@ function Dashboard({ projects }: { projects: Project[] }) {
 
 // ---- TEMPLATES ----
 function TemplatesArea({ projects, library, setLibrary }: { projects: Project[]; library: { name: string; size: number; url?: string }[]; setLibrary: React.Dispatch<React.SetStateAction<{ name: string; size: number; url?: string }[]>> }) {
-      useEffect(() => { (async () => { try { const list = await listTemplates(); setLibrary(list); } catch(e) { console.warn('templates load failed', e); } })(); }, []);
-const onUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const onUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files) return;
-    const list = await Promise.all(Array.from(e.target.files).map(f => uploadTemplate(f)));
-    setLibrary(prev => [...prev, ...list]);
+    const list = Array.from(e.target.files).map((f) => ({ name: f.name, size: f.size, url: URL.createObjectURL(f) }));
+    setLibrary((prev) => [...prev, ...list]);
   };
 
   return (
@@ -841,7 +824,7 @@ const onUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
               <div className="flex items-center gap-2"><span>📄</span>{f.name}</div>
               <div className="flex items-center gap-3">
                 {f.url && <a href={f.url} download className="text-xs text-green-700 hover:underline">Download</a>}
-                <button onClick={async () => { await deleteTemplate(f.name); setLibrary(library.filter((_, idx) => idx !== i)); }} className="text-xs text-red-600">Remove</button>
+                <button onClick={() => setLibrary(library.filter((_, idx) => idx !== i))} className="text-xs text-red-600">Remove</button>
               </div>
             </li>
           ))}
