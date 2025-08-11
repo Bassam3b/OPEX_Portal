@@ -1,14 +1,14 @@
 import { supabase, BUCKET } from './supabaseClient'
-import type { Project, Idea, Attachment } from './types'
+import type { Attachment } from './types'
 
-const toDb = (p: Project) => ({
+const toDb = (p: any) => ({
   id: p.id, title: p.title, department: p.department, sponsor: p.sponsor ?? null, type: p.type,
   impact: p.impact, effort: p.effort, description: p.description ?? null,
   cost_sar: p.costSAR ?? null, expected_savings_sar: p.expectedSavingsSAR ?? null,
   attachments: p.attachments ?? [], status: p.status, completion_pct: p.completionPct,
   created_at: new Date(p.createdAt).toISOString(),
 })
-const fromDb = (r: any): Project => ({
+const fromDb = (r: any): any => ({
   id: r.id, title: r.title, department: r.department, sponsor: r.sponsor ?? undefined, type: r.type,
   impact: r.impact, effort: r.effort, description: r.description ?? undefined,
   costSAR: r.cost_sar ?? undefined, expectedSavingsSAR: r.expected_savings_sar ?? undefined,
@@ -20,7 +20,7 @@ export async function fetchProjects(): Promise<Project[]> {
   const { data, error } = await supabase.from('projects').select('*').order('created_at', { ascending: false })
   if (error) throw error; return (data ?? []).map(fromDb)
 }
-export async function upsertProject(p: Project): Promise<void> {
+export async function upsertProject(p: any): Promise<void> {
   const { error } = await supabase.from('projects').upsert(toDb(p)); if (error) throw error
 }
 
@@ -31,7 +31,7 @@ export async function fetchIdeas(): Promise<Idea[]> {
     benefitNote: r.benefit_note ?? undefined, effortNote: r.effort_note ?? undefined, stage: r.stage
   }))
 }
-export async function upsertIdea(i: Idea): Promise<void> {
+export async function upsertIdea(i: any): Promise<void> {
   const { error } = await supabase.from('ideas').upsert({
     id: i.id, title: i.title, owner: i.owner ?? null, department: i.department ?? null,
     benefit_note: i.benefitNote ?? null, effort_note: i.effortNote ?? null, stage: i.stage
