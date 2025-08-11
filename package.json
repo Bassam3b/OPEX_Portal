@@ -1,32 +1,25 @@
 {
-  "name": "opex-portal-ts",
+  "name": "opex-portal-vite-ts",
   "version": "1.0.0",
   "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview"
+  },
   "dependencies": {
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-scripts": "5.0.1",
     "recharts": "^2.12.7"
   },
   "devDependencies": {
-    "typescript": "4.9.5",
-    "tailwindcss": "^3.4.7",
-    "postcss": "^8.4.32",
-    "autoprefixer": "^10.4.19",
     "@types/react": "^18.2.66",
-    "@types/react-dom": "^18.2.22"
-  },
-  "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject"
-  },
-  "overrides": {
-    "ajv": "6.12.6",
-    "ajv-keywords": "3.5.2",
-    "schema-utils": "3.1.1",
-    "terser-webpack-plugin": "5.3.10",
-    "ajv-formats": "2.1.1"
+    "@types/react-dom": "^18.2.22",
+    "autoprefixer": "^10.4.19",
+    "postcss": "^8.4.32",
+    "tailwindcss": "^3.4.7",
+    "typescript": "5.4.5",
+    "vite": "^5.4.2"
   }
 }
