@@ -804,7 +804,7 @@ function Dashboard({ projects }: { projects: Project[] }) {
 }
 
 // ---- TEMPLATES ----
-function TemplatesArea({ projects, library, setLibrary }: { projects: Project[]; library: { name: string; size: number; url?: string }[]; setLibrary: (l: { name: string; size: number; url?: string }[]) => void }) {
+function TemplatesArea({ projects, library, setLibrary }: { projects: Project[]; library: { name: string; size: number; url?: string }[]; setLibrary: React.Dispatch<React.SetStateAction<{ name: string; size: number; url?: string }[]>> }) {
     const onUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files) return;
     const list = Array.from(e.target.files).map((f) => ({ name: f.name, size: f.size, url: URL.createObjectURL(f) }));
