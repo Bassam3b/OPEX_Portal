@@ -681,7 +681,7 @@ function PriorityMatrix({ projectsByQuadrant, projects, setProjects, selectedPro
                     <div>
                       <label className="text-xs text-gray-500">Attachments</label>
                       <ul className="mt-1 divide-y rounded-xl border">
-                        {p.attachments.map((a, ai) => (
+                        {p.attachments.map((a: { name: string; size: number; url?: string }, ai: number) => (
                           <li key={ai} className="flex items-center justify-between px-3 py-2 text-xs">
                             <span className="truncate">📄 {a.name}</span>
                             <button onClick={() => updateProject(p.id, { attachments: p.attachments.filter((_, idx) => idx !== ai) })} className="text-red-600">Remove</button>
