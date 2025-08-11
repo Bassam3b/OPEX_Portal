@@ -1,4 +1,3 @@
-
 import React, { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
@@ -205,7 +204,12 @@ function RequestForm({addProject}){
     impact:3,effort:3,status:"Not Started",completion:0,type:"Kaizen"
   });
   const onChange = e => setForm(f=>({...f,[e.target.name]: e.target.type==="range"||e.target.type==="number"? Number(e.target.value): e.target.value}));
-  const submit = e => { e.preventDefault(); addProject(form); alert("Project submitted and placed on the Matrix."); setForm(f=>({...f,title:\"\",description:\"\",requester:\"\"})) };
+  const submit = e => { 
+    e.preventDefault(); 
+    addProject(form); 
+    alert("Project submitted and placed on the Matrix."); 
+    setForm(f => ({ ...f, title: "", description: "", requester: "" })); 
+  };
   const printForm = () => window.print();
 
   return (
@@ -356,8 +360,8 @@ function Templates({files,setFiles}){
       <div className="card" style={{padding:12,display:"flex",gap:12,justifyContent:"space-between",alignItems:"center"}}>
         <div style={{fontSize:14}}><div style={{fontWeight:600}}>Template Library</div><div style={{fontSize:12,color:"#6b7280"}}>Attach files for quick access. Keep originals in the controlled OPEX folder.</div></div>
         <label className="btn btn-primary" style={{cursor:"pointer"}}>
-          <Paperclip size={16}/> Add Attachments
-          <input type="file" className="hidden" style={{display:"none"}} multiple onChange={onPick}/>
+          Add Attachments
+          <input type="file" style={{display:"none"}} multiple onChange={onPick}/>
         </label>
       </div>
       <div className="grid" style={{gridTemplateColumns:"1fr 1fr"}}>
