@@ -549,7 +549,7 @@ function CIBoard({ ideas, setIdeas, onPromote }: { ideas: Idea[]; setIdeas: (i: 
                   </div>
                   {stage === "Ready for Priority" && (
                     <div className="mt-2">
-                      <button onClick={() => onPromote(i)} className="rounded-lg bg-[var(--primary)] px-2 py-1 text-xs font-semibold text-white">Send to Priority Matrix</button>
+                      <button onClick={() => { onPromote(i); setIdeas(ideas.filter(x => x.id !== i.id)); }} className="rounded-lg bg-[var(--primary)] px-2 py-1 text-xs font-semibold text-white">Send to Priority Matrix</button>
                     </div>
                   )}
                 </div>
@@ -836,13 +836,7 @@ function TemplatesArea({ projects }: { projects: Project[] }) {
 }
 
 // ---- FOOTER & HELP ----
-function Footer() {
-  return (
-    <footer className="mt-12 border-t py-6 text-center text-xs text-gray-500">
-      © {new Date().getFullYear()} Neproplast. OPEX Portal • Green/Gray/White theme. Built for keyboard and mouse.
-    </footer>
-  );
-}
+function Footer() { return null; }
 
 function KeyShortcuts() {
   const [open, setOpen] = useState(false);
