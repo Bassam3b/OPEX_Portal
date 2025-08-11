@@ -90,12 +90,17 @@ export default function OpexApp() {
   const [activeIndex, setActiveIndex] = useState(0);
 
   // Projects & Ideas state
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [ideas, setIdeas] = useState<Idea[]>([
+  const [projects, setProjects] = useState<Project[]>(() => { try { const raw = localStorage.getItem("opex_projects_v1"); return raw ? JSON.parse(raw) : []; } catch { return []; } });
+  const [ideas, setIdeas] = useState<Idea[]>(() => { try { const raw = localStorage.getItem("opex_ideas_v1"); if (raw) return JSON.parse(raw); } catch {} return [
     { id: uid("idea"), title: "Reduce changeover on Extruder L4 (SMED)", stage: "To Evaluate", department: "Production" },
     { id: uid("idea"), title: "Barcode error‑proofing at packing (Poka Yoke)", stage: "Under Review", department: "QA" },
-  ]);
+  ]; });
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
+
+  // Templates library (files uploaded in Templates tab)
+  const [library, setLibrary] = useState<{ name: string; size: number; url?: string }[]>(() => {
+    try { const raw = localStorage.getItem("opex_library_v1"); return raw ? JSON.parse(raw) : []; } catch { return []; }
+  });
 
   // Keyboard navigation across tabs
   useEffect(() => {
@@ -122,6 +127,11 @@ export default function OpexApp() {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [activeIndex]);
+
+    // Persist to localStorage whenever state changes
+  useEffect(() => { try { localStorage.setItem("opex_projects_v1", JSON.stringify(projects)); } catch {} }, [projects]);
+  useEffect(() => { try { localStorage.setItem("opex_ideas_v1", JSON.stringify(ideas)); } catch {} }, [ideas]);
+  useEffect(() => { try { localStorage.setItem("opex_library_v1", JSON.stringify(library)); } catch {} }, [library]);
 
   // Derived data
   const projectsByQuadrant = useMemo(() => {
@@ -186,7 +196,7 @@ export default function OpexApp() {
           />
         )}
         {activeIndex === 4 && <Dashboard projects={projects} />}
-        {activeIndex === 5 && <TemplatesArea projects={projects} />}
+        {activeIndex === 5 && <TemplatesArea projects={projects} library={library} setLibrary={setLibrary} />}
       </main>
 
       <Footer />
@@ -464,7 +474,10 @@ function ProjectRequest({ onSubmit }: { onSubmit: (p: Project) => void }) {
                 {files.map((f, i) => (
                   <li key={i} className="flex items-center justify-between px-3 py-2 text-sm">
                     <div className="flex items-center gap-2"><span>📄</span><span>{f.name}</span></div>
-                    {f.url && <a href={f.url} download className="text-xs text-green-700 hover:underline">Download</a>}
+                    <div className="flex items-center gap-3">
+                      {f.url && <a href={f.url} download className="text-xs text-green-700 hover:underline">Download</a>}
+                      <button type="button" onClick={() => setFiles(files.filter((_, idx) => idx !== i))} className="text-xs text-red-600">Remove</button>
+                    </div>
                   </li>
                 ))}
               </ul>
@@ -664,6 +677,19 @@ function PriorityMatrix({ projectsByQuadrant, projects, setProjects, selectedPro
                     <label className="text-xs text-gray-500">Description</label>
                     <textarea value={p.description || ""} onChange={(e) => updateProject(p.id, { description: e.target.value })} rows={3} className="mt-1 w-full rounded-xl border px-3 py-2" />
                   </div>
+                  {p.attachments && p.attachments.length > 0 && (
+                    <div>
+                      <label className="text-xs text-gray-500">Attachments</label>
+                      <ul className="mt-1 divide-y rounded-xl border">
+                        {p.attachments.map((a, ai) => (
+                          <li key={ai} className="flex items-center justify-between px-3 py-2 text-xs">
+                            <span className="truncate">📄 {a.name}</span>
+                            <button onClick={() => updateProject(p.id, { attachments: p.attachments.filter((_, idx) => idx !== ai) })} className="text-red-600">Remove</button>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
                 </div>
               );
             })()
@@ -778,10 +804,8 @@ function Dashboard({ projects }: { projects: Project[] }) {
 }
 
 // ---- TEMPLATES ----
-function TemplatesArea({ projects }: { projects: Project[] }) {
-  const [library, setLibrary] = useState<{ name: string; size: number; url?: string }[]>([]);
-
-  const onUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+function TemplatesArea({ projects, library, setLibrary }: { projects: Project[]; library: { name: string; size: number; url?: string }[]; setLibrary: (l: { name: string; size: number; url?: string }[]) => void }) {
+    const onUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files) return;
     const list = Array.from(e.target.files).map((f) => ({ name: f.name, size: f.size, url: URL.createObjectURL(f) }));
     setLibrary((prev) => [...prev, ...list]);
@@ -798,7 +822,10 @@ function TemplatesArea({ projects }: { projects: Project[] }) {
           {library.map((f, i) => (
             <li key={i} className="flex items-center justify-between px-3 py-2 text-sm">
               <div className="flex items-center gap-2"><span>📄</span>{f.name}</div>
-              {f.url && <a href={f.url} download className="text-xs text-green-700 hover:underline">Download</a>}
+              <div className="flex items-center gap-3">
+                {f.url && <a href={f.url} download className="text-xs text-green-700 hover:underline">Download</a>}
+                <button onClick={() => setLibrary(library.filter((_, idx) => idx !== i))} className="text-xs text-red-600">Remove</button>
+              </div>
             </li>
           ))}
         </ul>
